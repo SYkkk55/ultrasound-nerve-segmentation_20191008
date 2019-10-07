@@ -14,7 +14,7 @@ image_cols = 580
 def create_train_data():
     train_data_path = os.path.join(data_path, 'train')
     images = os.listdir(train_data_path)
-    total = len(images) / 2
+    total =int( len(images) / 2)
 
     imgs = np.ndarray((total, image_rows, image_cols), dtype=np.uint8)
     imgs_mask = np.ndarray((total, image_rows, image_cols), dtype=np.uint8)
@@ -27,8 +27,8 @@ def create_train_data():
         if 'mask' in image_name:
             continue
         image_mask_name = image_name.split('.')[0] + '_mask.tif'
-        img = imread(os.path.join(train_data_path, image_name), as_grey=True)
-        img_mask = imread(os.path.join(train_data_path, image_mask_name), as_grey=True)
+        img = imread(os.path.join(train_data_path, image_name), as_gray=True)
+        img_mask = imread(os.path.join(train_data_path, image_mask_name), as_gray=True)
 
         img = np.array([img])
         img_mask = np.array([img_mask])
@@ -53,25 +53,28 @@ def load_train_data():
 
 
 def create_test_data():
-    train_data_path = os.path.join(data_path, 'test')
-    images = os.listdir(train_data_path)
-    total = len(images)
+    test_data_path = os.path.join(data_path, 'test')
+    images = os.listdir(test_data_path)
+    total = int(len(images))
 
     imgs = np.ndarray((total, image_rows, image_cols), dtype=np.uint8)
-    imgs_id = np.ndarray((total, ), dtype=np.int32)
+    imgs_mask = np.ndarray((total, image_rows, image_cols), dtype=np.uint8)
 
     i = 0
-    print('-'*30)
-    print('Creating test images...')
-    print('-'*30)
+    print('-' * 30)
+    print('Creating testing images...')
+    print('-' * 30)
     for image_name in images:
-        img_id = int(image_name.split('.')[0])
-        img = imread(os.path.join(train_data_path, image_name), as_grey=True)
+
+        image_mask_name = image_name.split('.')[0] + '.tif'
+        img = imread(os.path.join(test_data_path, image_name), as_gray=True)
+        img_mask = imread(os.path.join(test_data_path, image_mask_name), as_gray=True)
 
         img = np.array([img])
+        img_mask = np.array([img_mask])
 
         imgs[i] = img
-        imgs_id[i] = img_id
+        imgs_mask[i] = img_mask
 
         if i % 100 == 0:
             print('Done: {0}/{1} images'.format(i, total))
@@ -79,7 +82,7 @@ def create_test_data():
     print('Loading done.')
 
     np.save('imgs_test.npy', imgs)
-    np.save('imgs_id_test.npy', imgs_id)
+    np.save('imgs_mask_test.npy', imgs_mask)
     print('Saving to .npy files done.')
 
 

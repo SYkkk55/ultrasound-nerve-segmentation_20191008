@@ -1,6 +1,7 @@
 from __future__ import print_function
-
 import os
+import cv2
+from imageio import imwrite
 from skimage.transform import resize
 from skimage.io import imsave
 import numpy as np
@@ -72,7 +73,7 @@ def get_unet():
 
     model = Model(inputs=[inputs], outputs=[conv10])
 
-    model.compile(optimizer=Adam(lr=1e-5), loss=dice_coef_loss, metrics=[dice_coef])
+    model.compile(optimizer=Adam(lr=1e-5), loss=dice_coef_loss, metrics=['accuracy'])
 
     return model
 
@@ -86,7 +87,9 @@ def preprocess(imgs):
     return imgs_p
 
 
+
 def train_and_predict():
+    import numpy as np
     print('-'*30)
     print('Loading and preprocessing train data...')
     print('-'*30)
@@ -123,7 +126,6 @@ def train_and_predict():
     print('-'*30)
     imgs_test, imgs_id_test = load_test_data()
     imgs_test = preprocess(imgs_test)
-
     imgs_test = imgs_test.astype('float32')
     imgs_test -= mean
     imgs_test /= std
@@ -133,6 +135,23 @@ def train_and_predict():
     print('-'*30)
     model.load_weights('weights.h5')
 
+    #import matplotlib.pyplot as plt
+    import numpy as np
+    '''''
+    loss_x = list(map(int, np.linspace(1, len(train_loss_list), len(train_loss_list))))
+    axes = plt.gca()
+    # axes.set_ylim([min(train_loss_list+test_loss_list)[0] ,max(train_loss_list+test_loss_list)[0]])
+    axes.set_ylabel('Loss')
+    axes.set_xlabel('epoch')
+    plt.plot(loss_x, train_loss_list, color='blue', marker='.', linestyle='-', linewidth=2, markersize=12,
+             label='train')
+    plt.plot(loss_x, test_loss_list, color='red', marker='.', linestyle='-', linewidth=2, markersize=12, label='test')
+    plt.legend(loc='upper right')
+    fig1 = plt.gcf()
+    plt.show()
+    plt.draw()
+    fig1.savefig('./loss.png')
+'''''
     print('-'*30)
     print('Predicting masks on test data...')
     print('-'*30)
@@ -146,8 +165,21 @@ def train_and_predict():
     if not os.path.exists(pred_dir):
         os.mkdir(pred_dir)
     for image, image_id in zip(imgs_mask_test, imgs_id_test):
+
         image = (image[:, :, 0] * 255.).astype(np.uint8)
+
+        #imwrite(os.path.join(pred_dir, str(imgs_id) + '_pred.png'), image)
         imsave(os.path.join(pred_dir, str(image_id) + '_pred.png'), image)
+
+    image_path = "./raw/test"
+    for image_name in os.listdir(image_path):
+       # for i in range(96):
+            #for j in range(96):
+               # if image[i][j] == 255:
+               #    mask[i, j, 2] = 230
+            # imsave(os.path.join(image_path,  '_mask.png'), img[0])
+        imgid = image_name.split(".")[0]
+        cv2.imwrite("./raw/predict/" + str(imgid) + "_mask.png", image)
 
 if __name__ == '__main__':
     train_and_predict()
